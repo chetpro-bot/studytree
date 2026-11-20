@@ -1,0 +1,17 @@
+{
+  "name": "StudyTree - 계층형 지식 아웃라이너",
+  "short_name": "StudyTree",
+  "description": "고교 탐구부터 의약학 스터디까지, 체계적인 계층형 지식 아웃라이너 & 지식 트리",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
