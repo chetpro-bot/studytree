@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, BookOpen, Layers, CheckCircle2, RefreshCw } from 'lucide-react';
+import { Plus, BookOpen, Layers, RefreshCw } from 'lucide-react';
 import type { StudyNode, TreeStats } from '../types';
 import { TreeNodeItem } from './TreeNodeItem';
 import { APP_VERSION } from '../constants/version';
@@ -46,12 +46,6 @@ export const TreeExplorer: React.FC<TreeExplorerProps> = ({
             {nodes.length}개 대단원
           </span>
         </div>
-        <div className="flex items-center gap-2 text-[11px]">
-          <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
-            <CheckCircle2 className="w-3 h-3" />
-            {stats.progressPercent}%
-          </span>
-        </div>
       </div>
 
       {/* 2. 스크롤 가능한 트리 리스트 영역 */}
@@ -69,7 +63,7 @@ export const TreeExplorer: React.FC<TreeExplorerProps> = ({
             </button>
           </div>
         ) : (
-          <div className="space-y-0.5 px-2 py-1">
+          <div className="space-y-0.5">
             {nodes.map((node) => (
               <TreeNodeItem
                 key={node.id}
