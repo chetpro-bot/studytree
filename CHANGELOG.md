@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.3] - 2026-11-21
+
+### Fixed & Improved
+- **PDF 트리 자동화 엔진 전면 재설계 (초고속·고정밀 변환)**:
+  - **AI 무한 재시도 버그 수정**: 구형 모델(`gemini-2.0-flash`)과 과부하 모델(`gemini-3.8-flash`) 간에 발생하던 재귀 핑퐁 무한 루프를 완전히 제거하고, 중복 시도 차단(`triedModels`) 큐 + 30초 타임아웃 + 즉시 취소(`AbortController`) 구조로 전면 개편
+  - **로컬 폰트 크기·굵기 기반 스마트 구조화**: PDF.js에서 각 줄의 폰트 크기(H1/H2/H3)·굵기(Bold)·Y좌표 줄바꿈·목차 번호(`I.`, `1.`, `3-4.` 등)를 종합 분석하여 API 대기 없이 **0.1초 만에 정교한 계층 트리**를 즉시 생성
+  - **로컬 PDF Web Worker 번들링**: 외부 CDN 의존성을 제거하고 앱 내 로컬 워커로 구동하여 추출 안정성과 속도 향상
+  - **현역 초고속 AI 모델 반영**: `Gemini 3.5 Flash-Lite` 및 `Gemini 3.8 Flash` 중심으로 모델 목록 정리
+
 ## [1.1.2] - 2026-11-21
 
 ### Fixed
