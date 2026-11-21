@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, BookOpen, Layers, RefreshCw, Sparkles } from 'lucide-react';
+import { Plus, BookOpen, Layers, RefreshCw, Sparkles, ImageDown } from 'lucide-react';
 import type { StudyNode, TreeStats } from '../types';
 import { TreeNodeItem } from './TreeNodeItem';
 import { APP_VERSION } from '../constants/version';
@@ -16,6 +16,7 @@ interface TreeExplorerProps {
   onAddSibling: (targetId: string) => void;
   onAddRootNode: () => void;
   onOpenPdfImport?: () => void;
+  onOpenImageExport?: () => void;
   onMoveNode: (id: string, direction: 'up' | 'down') => void;
   onDeleteNode: (id: string) => void;
   onCheckUpdate?: () => void;
@@ -33,6 +34,7 @@ export const TreeExplorer: React.FC<TreeExplorerProps> = ({
   onAddSibling,
   onAddRootNode,
   onOpenPdfImport,
+  onOpenImageExport,
   onMoveNode,
   onDeleteNode,
   onCheckUpdate,
@@ -48,6 +50,16 @@ export const TreeExplorer: React.FC<TreeExplorerProps> = ({
             {nodes.length}개 대단원
           </span>
         </div>
+        {onOpenImageExport && nodes.length > 0 && (
+          <button
+            onClick={onOpenImageExport}
+            title="트리 구조를 A4 이미지로 저장 또는 인쇄"
+            className="flex items-center gap-1 px-2 py-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50/80 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/70 rounded-md transition cursor-pointer"
+          >
+            <ImageDown className="w-3.5 h-3.5" />
+            <span>A4 출력</span>
+          </button>
+        )}
       </div>
 
       {/* 2. 스크롤 가능한 트리 리스트 영역 */}

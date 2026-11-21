@@ -20,6 +20,7 @@ import {
   LogOut,
   RefreshCw,
   Sparkles,
+  ImageDown,
 } from 'lucide-react';
 import type { Notebook } from '../types';
 import type { User } from 'firebase/auth';
@@ -31,6 +32,7 @@ interface HeaderProps {
   onSelectNotebook: (id: string) => void;
   onAddNotebook: (title: string) => void;
   onOpenPdfImport?: () => void;
+  onOpenImageExport?: () => void;
   onRenameNotebook: (id: string, newTitle: string) => void;
   onDeleteNotebook: (id: string) => void;
   onExpandAll: () => void;
@@ -59,6 +61,7 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectNotebook,
   onAddNotebook,
   onOpenPdfImport,
+  onOpenImageExport,
   onRenameNotebook,
   onDeleteNotebook,
   onExpandAll,
@@ -313,6 +316,16 @@ export const Header: React.FC<HeaderProps> = ({
           accept=".json"
           className="hidden"
         />
+
+        {onOpenImageExport && (
+          <button
+            onClick={onOpenImageExport}
+            className="p-1.5 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition"
+            title="지식 트리 A4 이미지로 저장/인쇄"
+          >
+            <ImageDown className="w-4 h-4" />
+          </button>
+        )}
 
         <button
           onClick={onExportJSON}

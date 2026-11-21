@@ -7,6 +7,7 @@ import { DetailEditor } from './components/DetailEditor';
 import { AuthModal } from './components/AuthModal';
 import { UpdateModal } from './components/UpdateModal';
 import { PdfImportModal } from './components/PdfImportModal';
+import { TreeImageExportModal } from './components/TreeImageExportModal';
 import { getBreadcrumbs } from './utils/treeUtils';
 
 export function App() {
@@ -64,6 +65,7 @@ export function App() {
 
   const [isMobileTreeOpen, setIsMobileTreeOpen] = useState(false);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+  const [isImageExportOpen, setIsImageExportOpen] = useState(false);
 
   const breadcrumbs = useMemo(() => {
     if (!activeNotebook || !activeNodeId) return [];
@@ -86,6 +88,7 @@ export function App() {
         onSelectNotebook={selectNotebook}
         onAddNotebook={addNotebook}
         onOpenPdfImport={() => setIsPdfModalOpen(true)}
+        onOpenImageExport={() => setIsImageExportOpen(true)}
         onRenameNotebook={renameNotebook}
         onDeleteNotebook={deleteNotebook}
         onExpandAll={expandAll}
@@ -139,6 +142,7 @@ export function App() {
             onAddSibling={addSiblingNode}
             onAddRootNode={addRootNode}
             onOpenPdfImport={() => setIsPdfModalOpen(true)}
+            onOpenImageExport={() => setIsImageExportOpen(true)}
             onMoveNode={moveNode}
             onDeleteNode={deleteNode}
             onCheckUpdate={() => checkForUpdate(true)}
@@ -184,6 +188,13 @@ export function App() {
         isOpen={isPdfModalOpen}
         onClose={() => setIsPdfModalOpen(false)}
         onImport={importNotebookFromPdf}
+      />
+
+      {/* 6. 지식 트리 A4 이미지 출력 모달 */}
+      <TreeImageExportModal
+        isOpen={isImageExportOpen}
+        onClose={() => setIsImageExportOpen(false)}
+        notebook={activeNotebook}
       />
     </div>
   );
