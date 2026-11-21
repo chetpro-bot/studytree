@@ -1,7 +1,6 @@
 import React from 'react';
 import {
-  Plus,
-  Minus,
+  ChevronRight,
   CornerDownRight,
   PlusCircle,
   ArrowUp,
@@ -14,8 +13,6 @@ import { countDescendants } from '../utils/treeUtils';
 interface TreeNodeItemProps {
   node: StudyNode;
   depth: number;
-  isLast?: boolean;
-  lineGuides?: boolean[];
   activeNodeId: string | null;
   expandedNodeIds: Set<string>;
   searchMatchingIds: Set<string>;
@@ -30,8 +27,6 @@ interface TreeNodeItemProps {
 export const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
   node,
   depth,
-  isLast = false,
-  lineGuides = [],
   activeNodeId,
   expandedNodeIds,
   searchMatchingIds,
@@ -63,76 +58,37 @@ export const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
 
   return (
     <div className="select-none text-xs">
+      {/* 노드 행 (노션 스타일 깔끔한 라운드 행) */}
       <div
         onClick={() => onSelectNode(node.id)}
-        style={{ paddingLeft: `${depth * 20 + 10}px` }}
-        className={`group relative flex items-center justify-between py-1.5 pr-2 transition cursor-pointer border-l-3 ${
+        className={`group flex items-center justify-between py-1.5 px-2 rounded-lg transition-colors cursor-pointer my-0.5 ${
           isSelected
-            ? 'bg-indigo-50/90 dark:bg-indigo-950/40 border-indigo-600 dark:border-indigo-400 text-indigo-950 dark:text-indigo-100 font-medium'
+            ? 'bg-indigo-50/90 dark:bg-indigo-950/60 text-indigo-950 dark:text-indigo-100 font-medium'
             : isMatching
-            ? 'bg-amber-50/90 dark:bg-amber-950/30 border-amber-500 text-slate-800 dark:text-slate-200'
-            : 'hover:bg-slate-100/80 dark:hover:bg-slate-850/80 border-transparent text-slate-700 dark:text-slate-300'
+            ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 font-medium'
+            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-slate-850/80'
         }`}
       >
-        {/* 상위 조상 연결선 (Ancestor Vertical Lines) */}
-        {lineGuides &&
-          lineGuides.map((hasMore, idx) =>
-            hasMore ? (
-              <span
-                key={idx}
-                className="absolute top-0 bottom-0 w-[1.5px] bg-slate-300 dark:bg-slate-700 pointer-events-none"
-                style={{ left: `${idx * 20 + 17}px` }}
-              />
-            ) : null
-          )}
-
-        {/* 현재 레벨의 가지 연결선 (Branch Lines: ├── 또는 └──) */}
-        {depth > 0 && (
-          <>
-            {isLast ? (
-              /* 마지막 자식: └── 매끄러운 단일 곡선 */
-              <span
-                className="absolute top-0 h-1/2 border-l-[1.5px] border-b-[1.5px] border-slate-300 dark:border-slate-700 rounded-bl-sm pointer-events-none"
-                style={{
-                  left: `${(depth - 1) * 20 + 17}px`,
-                  width: hasChildren ? '13px' : '28px',
-                }}
-              />
-            ) : (
-              /* 중간 자식: ├── 끊김 없는 매끄러운 직각 단일 가지선 */
-              <>
-                <span
-                  className="absolute top-0 bottom-0 w-[1.5px] bg-slate-300 dark:bg-slate-700 pointer-events-none"
-                  style={{ left: `${(depth - 1) * 20 + 17}px` }}
-                />
-                <span
-                  className="absolute top-1/2 h-[1.5px] bg-slate-300 dark:bg-slate-700 pointer-events-none -translate-y-1/2"
-                  style={{
-                    left: `${(depth - 1) * 20 + 17}px`,
-                    width: hasChildren ? '13px' : '28px',
-                  }}
-                />
-              </>
-            )}
-          </>
-        )}
-
-        {/* 좌측 콘텐츠 영역 */}
-        <div className="flex items-center gap-1.5 min-w-0 flex-1 relative z-10">
-          {/* [+] / [-] 토글 버튼 또는 Leaf 투명 스페이서(가지선이 텍스트까지 하나로 직결) */}
+        {/* 좌측: 회전 화살표 & 제목 */}
+        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+          {/* 노션 스타일 회전 화살표 토글 버튼 (▾ / ▸) */}
           {hasChildren ? (
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onToggleExpand(node.id);
               }}
-              className="w-4 h-4 rounded flex items-center justify-center bg-slate-200/90 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold transition shrink-0 shadow-2xs"
+              className="w-4 h-4 rounded hover:bg-slate-200/80 dark:hover:bg-slate-700/80 flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors shrink-0 cursor-pointer"
               title={isExpanded ? '접기' : '펼치기'}
             >
-              {isExpanded ? <Minus className="w-2.5 h-2.5" /> : <Plus className="w-2.5 h-2.5" />}
+              <ChevronRight
+                className={`w-3.5 h-3.5 transition-transform duration-150 ${
+                  isExpanded ? 'rotate-90 text-slate-600 dark:text-slate-300' : ''
+                }`}
+              />
             </button>
           ) : (
-            <div className="w-4 h-4 shrink-0 pointer-events-none" />
+            <div className="w-4 h-4 shrink-0" />
           )}
 
           {/* 노드 제목 */}
@@ -166,7 +122,7 @@ export const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
               e.stopPropagation();
               onAddChild(node.id);
             }}
-            className="p-1 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded transition"
+            className="p-1 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded transition cursor-pointer"
             title="하위 항목 추가 (+하위)"
           >
             <CornerDownRight className="w-3 h-3" />
@@ -177,7 +133,7 @@ export const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
               e.stopPropagation();
               onAddSibling(node.id);
             }}
-            className="p-1 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded transition"
+            className="p-1 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded transition cursor-pointer"
             title="같은 레벨 항목 추가 (+형제)"
           >
             <PlusCircle className="w-3 h-3" />
@@ -188,7 +144,7 @@ export const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
               e.stopPropagation();
               onMoveNode(node.id, 'up');
             }}
-            className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800 rounded transition"
+            className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800 rounded transition cursor-pointer"
             title="위로 이동"
           >
             <ArrowUp className="w-3 h-3" />
@@ -199,7 +155,7 @@ export const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
               e.stopPropagation();
               onMoveNode(node.id, 'down');
             }}
-            className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800 rounded transition"
+            className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800 rounded transition cursor-pointer"
             title="아래로 이동"
           >
             <ArrowDown className="w-3 h-3" />
@@ -207,7 +163,7 @@ export const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
 
           <button
             onClick={handleDelete}
-            className="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-white dark:hover:bg-slate-800 rounded transition"
+            className="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-white dark:hover:bg-slate-800 rounded transition cursor-pointer"
             title="삭제"
           >
             <Trash2 className="w-3 h-3" />
@@ -215,16 +171,14 @@ export const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
         </div>
       </div>
 
-      {/* 하위 자식 노드 재귀 렌더링 */}
+      {/* 하위 자식 노드 재귀 렌더링 (노션/아웃라이너 스타일 수직 인덴트 기준선) */}
       {hasChildren && isExpanded && (
-        <div className="relative">
-          {node.children.map((child, index) => (
+        <div className="relative ml-[14px] pl-2 border-l border-slate-200/90 dark:border-slate-800/90 hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
+          {node.children.map((child) => (
             <TreeNodeItem
               key={child.id}
               node={child}
               depth={depth + 1}
-              isLast={index === node.children.length - 1}
-              lineGuides={[...lineGuides, !isLast]}
               activeNodeId={activeNodeId}
               expandedNodeIds={expandedNodeIds}
               searchMatchingIds={searchMatchingIds}
