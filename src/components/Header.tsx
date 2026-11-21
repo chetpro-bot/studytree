@@ -19,6 +19,7 @@ import {
   Loader2,
   User as UserIcon,
   LogOut,
+  RefreshCw,
 } from 'lucide-react';
 import type { Notebook } from '../types';
 import type { User } from 'firebase/auth';
@@ -47,6 +48,9 @@ interface HeaderProps {
   syncStatus: 'synced' | 'syncing' | 'local';
   onOpenAuthModal: () => void;
   onLogout: () => void;
+  hasUpdate?: boolean;
+  isCheckingUpdate?: boolean;
+  onCheckUpdate?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -72,6 +76,9 @@ export const Header: React.FC<HeaderProps> = ({
   syncStatus,
   onOpenAuthModal,
   onLogout,
+  hasUpdate,
+  isCheckingUpdate,
+  onCheckUpdate,
 }) => {
   const [isRenameOpen, setIsRenameOpen] = useState(false);
   const [renameValue, setRenameValue] = useState('');
@@ -154,9 +161,21 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="font-bold text-base tracking-tight text-slate-900 dark:text-white flex items-center gap-1">
               Study<span className="text-indigo-600 dark:text-indigo-400">Tree</span>
             </span>
-            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 font-semibold">
-              {APP_VERSION}
-            </span>
+            <button
+              onClick={onCheckUpdate}
+              title={hasUpdate ? "새로운 업데이트가 있습니다! 클릭하여 업데이트" : "클릭하여 앱 최신 버전 확인"}
+              className={`relative flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full border transition font-semibold group cursor-pointer ${
+                hasUpdate
+                  ? 'bg-amber-50 dark:bg-amber-950/60 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 animate-pulse'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-200/60 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700'
+              }`}
+            >
+              <span>{APP_VERSION}</span>
+              <RefreshCw className={`w-2.5 h-2.5 ${isCheckingUpdate ? 'animate-spin text-indigo-500' : 'group-hover:rotate-180 transition-transform'}`} />
+              {hasUpdate && (
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 absolute -top-0.5 -right-0.5" />
+              )}
+            </button>
           </div>
         </div>
 
@@ -305,6 +324,19 @@ export const Header: React.FC<HeaderProps> = ({
           title="샘플 데이터 복원/초기화"
         >
           <RotateCcw className="w-4 h-4" />
+        </button>
+
+        {/* 앱 최신 버전 확인 및 업데이트 버튼 */}
+        <button
+          onClick={onCheckUpdate}
+          disabled={isCheckingUpdate}
+          className="relative p-1.5 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition"
+          title={hasUpdate ? "새로운 버전이 있습니다! 클릭하여 업데이트" : "최신 버전 확인 및 앱 업데이트"}
+        >
+          <RefreshCw className={`w-4 h-4 ${isCheckingUpdate ? 'animate-spin text-indigo-500' : ''}`} />
+          {hasUpdate && (
+            <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-slate-900" />
+          )}
         </button>
 
         {/* 라이트/다크 모드 토글 */}

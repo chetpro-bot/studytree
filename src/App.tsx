@@ -1,9 +1,11 @@
 import { useState, useMemo } from 'react';
 import { useStudyTree } from './hooks/useStudyTree';
+import { useAppUpdate } from './hooks/useAppUpdate';
 import { Header } from './components/Header';
 import { TreeExplorer } from './components/TreeExplorer';
 import { DetailEditor } from './components/DetailEditor';
 import { AuthModal } from './components/AuthModal';
+import { UpdateModal } from './components/UpdateModal';
 import { getBreadcrumbs } from './utils/treeUtils';
 
 export function App() {
@@ -47,6 +49,18 @@ export function App() {
     resetToSampleData,
   } = useStudyTree();
 
+  const {
+    isChecking: isCheckingUpdate,
+    hasUpdate,
+    latestVersion,
+    releaseNotes,
+    isModalOpen: isUpdateModalOpen,
+    closeModal: closeUpdateModal,
+    statusMessage: updateStatusMessage,
+    checkForUpdate,
+    performUpdate,
+  } = useAppUpdate();
+
   const [isMobileTreeOpen, setIsMobileTreeOpen] = useState(false);
 
   const breadcrumbs = useMemo(() => {
@@ -87,6 +101,9 @@ export function App() {
         syncStatus={syncStatus}
         onOpenAuthModal={openAuthModal}
         onLogout={handleLogout}
+        hasUpdate={hasUpdate}
+        isCheckingUpdate={isCheckingUpdate}
+        onCheckUpdate={() => checkForUpdate(true)}
       />
 
       {/* 2. 본문 좌우 2단 분할 워크스페이스 */}
@@ -121,6 +138,7 @@ export function App() {
             onAddRootNode={addRootNode}
             onMoveNode={moveNode}
             onDeleteNode={deleteNode}
+            onCheckUpdate={() => checkForUpdate(true)}
           />
         </div>
 
@@ -143,6 +161,19 @@ export function App() {
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={closeAuthModal}
+      />
+
+      {/* 4. 앱 버전 및 업데이트 모달 */}
+      <UpdateModal
+        isOpen={isUpdateModalOpen}
+        onClose={closeUpdateModal}
+        hasUpdate={hasUpdate}
+        latestVersion={latestVersion}
+        releaseNotes={releaseNotes}
+        statusMessage={updateStatusMessage}
+        onPerformUpdate={performUpdate}
+        isChecking={isCheckingUpdate}
+        onCheckAgain={() => checkForUpdate(true)}
       />
     </div>
   );

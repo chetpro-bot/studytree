@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, BookOpen, Layers, CheckCircle2 } from 'lucide-react';
+import { Plus, BookOpen, Layers, CheckCircle2, RefreshCw } from 'lucide-react';
 import type { StudyNode, TreeStats } from '../types';
 import { TreeNodeItem } from './TreeNodeItem';
 import { APP_VERSION } from '../constants/version';
@@ -17,6 +17,7 @@ interface TreeExplorerProps {
   onAddRootNode: () => void;
   onMoveNode: (id: string, direction: 'up' | 'down') => void;
   onDeleteNode: (id: string) => void;
+  onCheckUpdate?: () => void;
 }
 
 export const TreeExplorer: React.FC<TreeExplorerProps> = ({
@@ -32,6 +33,7 @@ export const TreeExplorer: React.FC<TreeExplorerProps> = ({
   onAddRootNode,
   onMoveNode,
   onDeleteNode,
+  onCheckUpdate,
 }) => {
   return (
     <aside className="h-full flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 select-none">
@@ -104,7 +106,14 @@ export const TreeExplorer: React.FC<TreeExplorerProps> = ({
         <span className="font-medium text-slate-600 dark:text-slate-300">
           총 {stats.total}개 항목
         </span>
-        <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500">{APP_VERSION}</span>
+        <button
+          onClick={onCheckUpdate}
+          className="flex items-center gap-1 text-[10px] font-mono text-slate-400 hover:text-indigo-600 dark:text-slate-500 dark:hover:text-indigo-400 transition cursor-pointer"
+          title="클릭하여 앱 최신 버전 확인"
+        >
+          <span>{APP_VERSION}</span>
+          <RefreshCw className="w-2.5 h-2.5" />
+        </button>
       </div>
     </aside>
   );
