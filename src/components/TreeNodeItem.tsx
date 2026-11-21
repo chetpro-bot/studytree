@@ -90,16 +90,16 @@ export const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
         {depth > 0 && (
           <>
             {isLast ? (
-              /* 마지막 자식: └── 곡선 */
+              /* 마지막 자식: └── 매끄러운 단일 곡선 */
               <span
-                className="absolute top-0 h-1/2 border-l-[1.5px] border-b-[1.5px] border-slate-300 dark:bg-transparent dark:border-slate-700 rounded-bl-sm pointer-events-none"
+                className="absolute top-0 h-1/2 border-l-[1.5px] border-b-[1.5px] border-slate-300 dark:border-slate-700 rounded-bl-sm pointer-events-none"
                 style={{
                   left: `${(depth - 1) * 20 + 17}px`,
-                  width: '13px',
+                  width: hasChildren ? '13px' : '28px',
                 }}
               />
             ) : (
-              /* 중간 자식: ├── 직각 가지선 */
+              /* 중간 자식: ├── 끊김 없는 매끄러운 직각 단일 가지선 */
               <>
                 <span
                   className="absolute top-0 bottom-0 w-[1.5px] bg-slate-300 dark:bg-slate-700 pointer-events-none"
@@ -109,7 +109,7 @@ export const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
                   className="absolute top-1/2 h-[1.5px] bg-slate-300 dark:bg-slate-700 pointer-events-none -translate-y-1/2"
                   style={{
                     left: `${(depth - 1) * 20 + 17}px`,
-                    width: '13px',
+                    width: hasChildren ? '13px' : '28px',
                   }}
                 />
               </>
@@ -119,7 +119,7 @@ export const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
 
         {/* 좌측 콘텐츠 영역 */}
         <div className="flex items-center gap-1.5 min-w-0 flex-1 relative z-10">
-          {/* [+] / [-] 토글 버튼 또는 Leaf 가지 선 */}
+          {/* [+] / [-] 토글 버튼 또는 Leaf 투명 스페이서(가지선이 텍스트까지 하나로 직결) */}
           {hasChildren ? (
             <button
               onClick={(e) => {
@@ -132,9 +132,7 @@ export const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
               {isExpanded ? <Minus className="w-2.5 h-2.5" /> : <Plus className="w-2.5 h-2.5" />}
             </button>
           ) : (
-            <div className="w-4 h-4 flex items-center justify-center shrink-0">
-              <span className="w-2.5 h-[1.5px] bg-slate-400 dark:bg-slate-500 rounded-full" />
-            </div>
+            <div className="w-4 h-4 shrink-0 pointer-events-none" />
           )}
 
           {/* 노드 제목 */}
