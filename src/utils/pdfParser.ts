@@ -14,7 +14,7 @@ export interface ExtractedPdfContent {
 }
 
 /**
- * 브라우저에서 PDF 파일로부터 텍스트를 페이지별로 추출합니다.
+ * 브라우저에서 PDF 파일로부터 Y축 위치를 분석하여 줄바꿈이 완벽히 보존된 텍스트를 추출합니다.
  */
 export async function extractTextFromPdf(file: File): Promise<ExtractedPdfContent> {
   const arrayBuffer = await file.arrayBuffer();
@@ -27,12 +27,45 @@ export async function extractTextFromPdf(file: File): Promise<ExtractedPdfConten
   for (let pageNum = 1; pageNum <= pageCount; pageNum++) {
     const page = await pdf.getPage(pageNum);
     const textContent = await page.getTextContent();
-    const pageText = textContent.items
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .map((item: any) => item.str || '')
-      .join(' ')
-      .trim();
 
+    let lastY: number | null = null;
+    const pageLines: string[] = [];
+    let currentLine = '';
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const item of textContent.items as any[]) {
+      if (!item.str) continue;
+      const currentY = item.transform ? Math.round(item.transform[5]) : null;
+
+      // Y 좌표가 3px 이상 차이나거나 hasEOL 플래그가 있으면 새로운 줄로 분리
+      if (lastY !== null && currentY !== null && Math.abs(currentY - lastY) > 3) {
+        if (currentLine.trim()) {
+          pageLines.push(currentLine.trim());
+        }
+        currentLine = item.str;
+      } else if (item.hasEOL) {
+        currentLine += item.str;
+        if (currentLine.trim()) {
+          pageLines.push(currentLine.trim());
+        }
+        currentLine = '';
+      } else {
+        if (currentLine && !currentLine.endsWith(' ')) {
+          currentLine += ' ';
+        }
+        currentLine += item.str;
+      }
+
+      if (currentY !== null) {
+        lastY = currentY;
+      }
+    }
+
+    if (currentLine.trim()) {
+      pageLines.push(currentLine.trim());
+    }
+
+    const pageText = pageLines.join('\n');
     if (pageText) {
       fullText += `[페이지 ${pageNum}]\n${pageText}\n\n`;
       if (!previewSnippet && pageText.length > 50) {
@@ -58,7 +91,7 @@ interface RawAiResponse {
 }
 
 /**
- * Gemini API를 호출하여 PDF 텍스트를 StudyTree 계층 구조로 변환합니다.
+ * Gemini AI를 호출하여 PDF 텍스트를 StudyTree 계층 구조로 변환합니다.
  */
 export async function convertPdfWithGemini(
   fullText: string,
@@ -136,7 +169,6 @@ ${fullText.slice(0, 300000)}
     throw new Error('Gemini API로부터 변환 결과를 받지 못했습니다.');
   }
 
-  // 마크다운 코드블록 제거 후 JSON 파싱
   let cleanedJson = rawText.trim();
   if (cleanedJson.startsWith('```json')) {
     cleanedJson = cleanedJson.replace(/^```json\s*/, '').replace(/\s*```$/, '');
@@ -179,56 +211,126 @@ ${fullText.slice(0, 300000)}
 }
 
 /**
- * 로컬 규칙 기반 파서 (API Key 없이 빠른 변환)
+ * 로컬 규칙 기반 파서 (API Key 없이 빠른 지식 트리 변환)
  */
 export function parsePdfWithRuleEngine(
-  fullText: string,
+  rawFullText: string,
   fileName: string
 ): { notebookTitle: string; description: string; nodes: StudyNode[] } {
   const cleanTitle = fileName.replace(/\.[^/.]+$/, '');
-  const lines = fullText
+
+  // 1단계: 인라인에 붙어있는 단원 번호(예: "...원리입니다. 3-4. 약물대사...")를 강제 줄바꿈으로 분리
+  const normalizedText = rawFullText
+    .replace(/\r\n/g, '\n')
+    .replace(/\[페이지 \d+\]/g, '\n\n')
+    .replace(
+      /([.?!:;]\s+|\s{2,}|\n+)(?=(?:[IVXLCDM]+\.|\d+[-.]\d+[\.\-]?\d*|\d+\.|\d+\)|\(\d+\)|제\s*\d+\s*[장편절조항]|Chapter\s*\d+|【\d+】)\s+[^\n]{1,60})/g,
+      '\n\n'
+    );
+
+  const lines = normalizedText
     .split('\n')
     .map((l) => l.trim())
-    .filter((l) => l.length > 0 && !l.startsWith('[페이지 '));
+    .filter((l) => l.length > 0);
 
-  // 대단원 정규식 패턴 (I., II., 제 1 장, Chapter, 1., etc.)
-  const majorHeaderRegex = /^(?:[IVXLCDM]+\.|\d+\.|\uC81C\s*\d+\s*[\uC7A5\uC808]|Chapter\s*\d+)\s*(.*)/i;
-  const subHeaderRegex = /^(?:\d+\.\d+|\(\d+\)|[가-힣]\.|\u2460|\u2461|\u2462|\u2463|\u2464|\u2465|\u25C6|\u25A0|\u25CF)\s*(.*)/;
+  // 대단원 정규식 패턴 (I., 1., 제1장, Chapter 1, 1편 등)
+  const majorHeaderRegex = /^(?:[IVXLCDM]+\.|\d+\.|\d+편\b|제\s*\d+\s*[장편절조항]|Chapter\s*\d+|#\s+|【\d+】|■)\s*(.*)/i;
+  // 중단원/소단원 정규식 패턴 (3-4., 1.1, 1), (1), 가., ①, ##, ◆ 등)
+  const subHeaderRegex = /^(?:\d+[-.]\d+[\.\-]?\d*|\(\d+\)|\d+\)|#{2,4}\s+|[가-힣]\.|\u2460|\u2461|\u2462|\u2463|\u2464|\u2465|\u2466|\u2467|\u2468|\u2469|◆|▶|●|\[\d+\])\s*(.*)/;
 
   interface RawSection {
     level: 1 | 2;
     title: string;
-    contentLines: string[];
+    content: string[];
   }
 
   const sections: RawSection[] = [];
   let currentSection: RawSection | null = null;
 
-  for (const line of lines) {
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line) continue;
+
     const majorMatch = line.match(majorHeaderRegex);
     const subMatch = line.match(subHeaderRegex);
 
-    if (majorMatch && line.length < 80) {
-      currentSection = { level: 1, title: line, contentLines: [] };
-      sections.push(currentSection);
-    } else if (subMatch && line.length < 80) {
-      currentSection = { level: 2, title: line, contentLines: [] };
+    if (majorMatch || subMatch) {
+      const isMajor = !!majorMatch;
+      let title = line;
+      let remainder = '';
+
+      // 만약 헤더 라인이 너무 길다면(본문이 줄바꿈 없이 붙은 경우), 적절한 길이(첫 40자)에서 제목 추출
+      if (line.length > 55) {
+        const colonIdx = line.indexOf(':');
+        const dashIdx = line.indexOf(' - ');
+        if (colonIdx > 5 && colonIdx < 50) {
+          title = line.slice(0, colonIdx).trim();
+          remainder = line.slice(colonIdx + 1).trim();
+        } else if (dashIdx > 5 && dashIdx < 50) {
+          title = line.slice(0, dashIdx).trim();
+          remainder = line.slice(dashIdx + 3).trim();
+        } else {
+          const words = line.split(' ');
+          let acc = '';
+          let splitIdx = words.length;
+          for (let w = 0; w < words.length; w++) {
+            if ((acc + ' ' + words[w]).length > 40) {
+              splitIdx = Math.max(2, w);
+              break;
+            }
+            acc += (acc ? ' ' : '') + words[w];
+          }
+          title = words.slice(0, splitIdx).join(' ');
+          remainder = words.slice(splitIdx).join(' ');
+        }
+      }
+
+      currentSection = {
+        level: isMajor ? 1 : 2,
+        title,
+        content: remainder ? [remainder] : [],
+      };
       sections.push(currentSection);
     } else if (currentSection) {
-      currentSection.contentLines.push(line);
+      currentSection.content.push(line);
     } else {
-      currentSection = { level: 1, title: 'I. ' + cleanTitle + ' 개요', contentLines: [line] };
+      currentSection = {
+        level: 1,
+        title: 'I. ' + cleanTitle + ' 개요',
+        content: [line],
+      };
       sections.push(currentSection);
     }
   }
 
+  // 2단계: 섹션 데이터를 바탕으로 다단계 계층 트리(대단원 - 중단원) 조립
   const rootNodes: StudyNode[] = [];
-  let lastMajorNode: StudyNode | null = null;
+  let currentRootNode: StudyNode | null = null;
 
-  for (let i = 0; i < sections.length; i++) {
-    const sec = sections[i];
-    const summary = sec.contentLines.slice(0, 3).join('\n') || '핵심 요약 없음';
-    const notes = sec.contentLines.slice(3).join('\n\n') || sec.contentLines.join('\n\n');
+  for (const sec of sections) {
+    let summary = '';
+    let notes = '';
+
+    if (sec.content.length > 0) {
+      const fullContent = sec.content.join('\n\n');
+      const paragraphs = fullContent.split('\n\n').filter(Boolean);
+      if (paragraphs.length >= 2) {
+        summary = paragraphs[0];
+        notes = paragraphs.slice(1).join('\n\n');
+      } else {
+        const sentences = fullContent.split(/(?<=[.?!])\s+/);
+        if (sentences.length > 2) {
+          summary = sentences.slice(0, 2).join(' ');
+          notes = sentences.slice(2).join(' ');
+        } else {
+          summary = fullContent;
+          notes = fullContent;
+        }
+      }
+    } else {
+      summary = `${sec.title}에 관한 핵심 정리`;
+      notes = '';
+    }
 
     const node: StudyNode = {
       id: generateNodeId(),
@@ -244,28 +346,56 @@ export function parsePdfWithRuleEngine(
 
     if (sec.level === 1) {
       rootNodes.push(node);
-      lastMajorNode = node;
+      currentRootNode = node;
     } else {
-      if (lastMajorNode) {
-        lastMajorNode.children.push(node);
+      // level 2 (하위 노드)
+      if (currentRootNode) {
+        currentRootNode.children.push(node);
       } else {
-        rootNodes.push(node);
+        // 상위 대단원이 아직 없는 경우 개요 대단원을 생성하고 그 안에 포함
+        currentRootNode = {
+          id: generateNodeId(),
+          title: 'I. ' + cleanTitle + ' 개요',
+          summary: '핵심 주제 및 세부 단원 목록',
+          notes: '',
+          status: 'not_started',
+          starred: false,
+          children: [node],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        rootNodes.push(currentRootNode);
       }
     }
   }
 
-  // 만약 헤더 패턴이 거의 검출되지 않은 일반 텍스트인 경우 20라인 단위로 자동 분할
+  // 만약 헤더 패턴이 전혀 검출되지 않은 일반 텍스트인 경우 15줄 단위로 스마트 분할
   if (rootNodes.length <= 1 && lines.length > 20) {
     rootNodes.length = 0;
     const chunkSize = 15;
     let chapterNum = 1;
+
+    // 전체 개요 대단원 1개 생성 후 하위 항목으로 배치
+    const mainRoot: StudyNode = {
+      id: generateNodeId(),
+      title: 'I. ' + cleanTitle + ' 본문 정리',
+      summary: `${lines.slice(0, 2).join(' ')}`,
+      notes: lines.slice(0, 5).join('\n\n'),
+      status: 'not_started',
+      starred: false,
+      children: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    rootNodes.push(mainRoot);
+
     for (let i = 0; i < lines.length; i += chunkSize) {
       const chunk = lines.slice(i, i + chunkSize);
-      const title = `${chapterNum}. ` + (chunk[0]?.slice(0, 30) || `단원 ${chapterNum}`);
-      const summary = chunk.slice(1, 4).join('\n') || chunk[0] || '';
-      const notes = chunk.slice(4).join('\n\n') || chunk.join('\n\n');
+      const title = `${chapterNum}. ` + (chunk[0]?.slice(0, 35) || `세부 주제 ${chapterNum}`);
+      const summary = chunk.slice(1, 3).join(' ') || chunk[0] || '';
+      const notes = chunk.slice(3).join('\n\n') || chunk.join('\n\n');
 
-      rootNodes.push({
+      mainRoot.children.push({
         id: generateNodeId(),
         title,
         summary,
@@ -282,7 +412,7 @@ export function parsePdfWithRuleEngine(
 
   return {
     notebookTitle: `[PDF] ${cleanTitle}`,
-    description: `PDF에서 변환된 지식 트리 (${rootNodes.length}개 단원)`,
+    description: `PDF에서 변환된 지식 트리 (${rootNodes.length}개 대단원)`,
     nodes: rootNodes,
   };
 }

@@ -222,7 +222,9 @@ export const PdfImportModal: React.FC<PdfImportModalProps> = ({
                 <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 <div className="text-xs">
                   <span className="font-bold text-sm block">지식 트리 구조화 완료!</span>
-                  총 {previewData.nodes.length}개의 대단원과 세부 항목이 체계적으로 생성되었습니다.
+                  총 {previewData.nodes.length}개 대단원 (전체{' '}
+                  {previewData.nodes.reduce((acc, n) => acc + 1 + n.children.length, 0)}개 단원)이
+                  체계적으로 생성되었습니다.
                 </div>
               </div>
 
