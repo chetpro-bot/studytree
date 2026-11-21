@@ -44,6 +44,7 @@ export const PdfImportModal: React.FC<PdfImportModalProps> = ({
 
   // 진행 상태
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const [stepMessage, setStepMessage] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -63,6 +64,22 @@ export const PdfImportModal: React.FC<PdfImportModalProps> = ({
       setApiKey(savedKey);
     }
   }, []);
+
+  // 분석 진행 중 경과 시간 타이머
+  useEffect(() => {
+    let timer: ReturnType<typeof setInterval> | null = null;
+    if (isProcessing) {
+      setElapsedSeconds(0);
+      timer = setInterval(() => {
+        setElapsedSeconds((prev) => prev + 1);
+      }, 1000);
+    } else {
+      setElapsedSeconds(0);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isProcessing]);
 
   if (!isOpen) return null;
 
@@ -209,9 +226,34 @@ export const PdfImportModal: React.FC<PdfImportModalProps> = ({
         <div className="p-6 overflow-y-auto space-y-5 flex-1">
           {/* 에러 메시지 알림 */}
           {errorMessage && (
-            <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-2.5">
-              <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
-              <div className="flex-1 leading-relaxed">{errorMessage}</div>
+            <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs flex flex-col gap-2.5">
+              <div className="flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                <div className="flex-1 leading-relaxed">{errorMessage}</div>
+              </div>
+              {mode === 'ai' && extractedText && (
+                <div className="pt-2.5 border-t border-rose-200/80 dark:border-rose-900/60 flex items-center justify-between flex-wrap gap-2">
+                  <span className="text-[11px] text-slate-600 dark:text-slate-400">
+                    구글 서버 대기 없이 지금 즉시 변환하고 싶으신가요?
+                  </span>
+                  <button
+                    onClick={() => {
+                      setMode('local');
+                      setErrorMessage(null);
+                      const result = parsePdfWithRuleEngine(extractedText, file?.name || '문서');
+                      setPreviewData({
+                        title: result.notebookTitle,
+                        description: result.description,
+                        nodes: result.nodes,
+                      });
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition cursor-pointer shadow-sm"
+                  >
+                    <Zap className="w-3.5 h-3.5 text-amber-300" />
+                    <span>로컬 목차 변환으로 즉시 생성</span>
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -444,7 +486,7 @@ export const PdfImportModal: React.FC<PdfImportModalProps> = ({
                         className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded px-1.5 py-0.5 text-[11px] focus:outline-none cursor-pointer"
                       >
                         <option value="gemini-3.8-flash">Gemini 3.8 Flash (최신/추천)</option>
-                        <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                        <option value="gemini-2.0-flash">Gemini 2.0 Flash (안정적)</option>
                         <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
                       </select>
                     </div>
@@ -500,7 +542,10 @@ export const PdfImportModal: React.FC<PdfImportModalProps> = ({
                 {isProcessing ? (
                   <>
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>{stepMessage || '처리 중...'}</span>
+                    <span>
+                      {stepMessage || '처리 중...'}
+                      {elapsedSeconds > 0 && ` (${elapsedSeconds}초 경과)`}
+                    </span>
                   </>
                 ) : (
                   <>

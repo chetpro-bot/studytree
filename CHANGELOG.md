@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.1] - 2026-11-21
+
+### Fixed
+- **Google AI 서버 과부하(High Demand) 대응 및 UX 대폭 개선**:
+  - 구글 서버 503/429 일시적 과부하 발생 시 1.5초 후 자동 백오프 재시도 및 안정적인 `Gemini 2.0 Flash` 모델 자동 폴백 탑재
+  - `gemini-3.8-flash`의 추론 수준(`thinkingLevel: 'low'`) 최적화로 처리 지연 시간 단축
+  - AI 분석 진행 시 실시간 경과 시간(`X초 경과`) 표시로 멈춤 오인 방지
+  - AI 서버 장애 시 에러창에서 원클릭으로 즉시 변환 가능한 `[⚡ 로컬 목차 변환으로 즉시 생성]` 버튼 추가
+
 ## [1.1.0] - 2026-11-21
 
 ### Fixed

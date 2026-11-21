@@ -1,5 +1,5 @@
 {
-  "version": "v1.1.0",
+  "version": "v1.1.1",
   "releaseDate": "2026-11-21",
-  "notes": "Google Gemini 최신 모델(gemini-3.8-flash) 지원 및 이전 모델 자동 폴백/재시도 처리 추가"
+  "notes": "구글 AI 서버 과부하(High Demand) 자동 재시도/대체모델 폴백 및 실시간 분석 경과 타이머/원클릭 로컬 변환 지원"
 }
