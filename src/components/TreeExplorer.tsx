@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, BookOpen, Layers, CheckCircle2, Flame } from 'lucide-react';
+import { Plus, BookOpen, Layers, CheckCircle2 } from 'lucide-react';
 import type { StudyNode, TreeStats } from '../types';
 import { TreeNodeItem } from './TreeNodeItem';
 import { APP_VERSION } from '../constants/version';
@@ -12,7 +12,6 @@ interface TreeExplorerProps {
   stats: TreeStats;
   onSelectNode: (id: string) => void;
   onToggleExpand: (id: string) => void;
-  onToggleStar: (id: string) => void;
   onAddChild: (parentId: string) => void;
   onAddSibling: (targetId: string) => void;
   onAddRootNode: () => void;
@@ -28,7 +27,6 @@ export const TreeExplorer: React.FC<TreeExplorerProps> = ({
   stats,
   onSelectNode,
   onToggleExpand,
-  onToggleStar,
   onAddChild,
   onAddSibling,
   onAddRootNode,
@@ -80,7 +78,6 @@ export const TreeExplorer: React.FC<TreeExplorerProps> = ({
                 searchMatchingIds={searchMatchingIds}
                 onSelectNode={onSelectNode}
                 onToggleExpand={onToggleExpand}
-                onToggleStar={onToggleStar}
                 onAddChild={onAddChild}
                 onAddSibling={onAddSibling}
                 onMoveNode={onMoveNode}
@@ -102,47 +99,12 @@ export const TreeExplorer: React.FC<TreeExplorerProps> = ({
         </div>
       </div>
 
-      {/* 3. 하단 고정 상태 바 (Footer) */}
-      <div className="p-3 bg-slate-50 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-800 space-y-2">
-        {/* 진행률 바 */}
-        <div className="space-y-1">
-          <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
-            <span className="flex items-center gap-1 font-medium text-slate-700 dark:text-slate-300">
-              <Flame className="w-3 h-3 text-amber-500" />
-              암기 달성률
-            </span>
-            <span className="font-semibold text-slate-900 dark:text-white">
-              {stats.mastered} / {stats.total}개 ({stats.progressPercent}%)
-            </span>
-          </div>
-
-          <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-indigo-500 via-indigo-600 to-emerald-500 transition-all duration-500 rounded-full"
-              style={{ width: `${Math.min(100, stats.progressPercent)}%` }}
-            />
-          </div>
-        </div>
-
-        {/* 상태별 통계 배지 */}
-        <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 pt-0.5">
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
-            완료 {stats.mastered}
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
-            학습중 {stats.learning}
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600 inline-block" />
-            미학습 {stats.notStarted}
-          </span>
-          <div className="flex items-center gap-1.5">
-            <span className="text-amber-500 font-medium">★ {stats.starred}</span>
-            <span className="text-[9px] font-mono text-slate-400 dark:text-slate-500">{APP_VERSION}</span>
-          </div>
-        </div>
+      {/* 3. 하단 상태 바 (Footer) */}
+      <div className="p-3 bg-slate-50 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+        <span className="font-medium text-slate-600 dark:text-slate-300">
+          총 {stats.total}개 항목
+        </span>
+        <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500">{APP_VERSION}</span>
       </div>
     </aside>
   );

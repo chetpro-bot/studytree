@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  Star,
   ChevronRight,
   Sparkles,
   BookOpen,
@@ -13,15 +12,13 @@ import {
   Clock,
   Layers,
 } from 'lucide-react';
-import type { StudyNode, BreadcrumbItem, LearningStatus } from '../types';
+import type { StudyNode, BreadcrumbItem } from '../types';
 
 interface DetailEditorProps {
   node: StudyNode | null;
   breadcrumbs: BreadcrumbItem[];
   onSelectNode: (id: string) => void;
   onUpdateNode: (id: string, fields: Partial<StudyNode>) => void;
-  onSetStatus: (id: string, status: LearningStatus) => void;
-  onToggleStar: (id: string) => void;
   onAddChild: (parentId: string) => void;
   onAddSibling: (targetId: string) => void;
   onIndent: (id: string) => void;
@@ -33,8 +30,6 @@ export const DetailEditor: React.FC<DetailEditorProps> = ({
   breadcrumbs,
   onSelectNode,
   onUpdateNode,
-  onSetStatus,
-  onToggleStar,
   onAddChild,
   onAddSibling,
   onIndent,
@@ -257,66 +252,6 @@ export const DetailEditor: React.FC<DetailEditorProps> = ({
             );
           })}
         </nav>
-
-        {/* 우측 빠른 액션: 중요 별표 & 상태 세그먼트 */}
-        <div className="flex items-center gap-2 shrink-0">
-          {/* 중요 표시 버튼 */}
-          <button
-            onClick={() => onToggleStar(node.id)}
-            className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border transition font-medium ${
-              node.starred
-                ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700/60 text-amber-700 dark:text-amber-300 shadow-xs'
-                : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-            }`}
-            title="중요 항목 표시"
-          >
-            <Star
-              className={`w-3.5 h-3.5 ${
-                node.starred ? 'fill-amber-400 text-amber-500' : 'text-slate-400'
-              }`}
-            />
-            <span className="hidden sm:inline">중요</span>
-          </button>
-
-          {/* 학습 상태 세그먼트 버튼 (미학습 / 학습중 / 암기완료) */}
-          <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700/80">
-            <button
-              onClick={() => onSetStatus(node.id, 'not_started')}
-              className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md transition font-medium ${
-                node.status === 'not_started'
-                  ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-xs'
-                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
-              }`}
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-              <span>미학습</span>
-            </button>
-
-            <button
-              onClick={() => onSetStatus(node.id, 'learning')}
-              className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md transition font-medium ${
-                node.status === 'learning'
-                  ? 'bg-amber-50 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700/50 shadow-xs'
-                  : 'text-slate-500 hover:text-amber-600 dark:hover:text-amber-400'
-              }`}
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-              <span>학습중</span>
-            </button>
-
-            <button
-              onClick={() => onSetStatus(node.id, 'mastered')}
-              className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md transition font-medium ${
-                node.status === 'mastered'
-                  ? 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700/50 shadow-xs'
-                  : 'text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400'
-              }`}
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              <span>암기완료</span>
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* 2. 메인 에디터 본문 영역 */}

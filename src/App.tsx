@@ -35,8 +35,6 @@ export function App() {
     expandAll,
     collapseAll,
     updateNode,
-    setNodeStatus,
-    toggleNodeStar,
     addChildNode,
     addSiblingNode,
     addRootNode,
@@ -118,7 +116,6 @@ export function App() {
             stats={stats}
             onSelectNode={handleSelectNode}
             onToggleExpand={toggleExpand}
-            onToggleStar={toggleNodeStar}
             onAddChild={addChildNode}
             onAddSibling={addSiblingNode}
             onAddRootNode={addRootNode}
@@ -134,8 +131,6 @@ export function App() {
             breadcrumbs={breadcrumbs}
             onSelectNode={setActiveNodeId}
             onUpdateNode={updateNode}
-            onSetStatus={setNodeStatus}
-            onToggleStar={toggleNodeStar}
             onAddChild={addChildNode}
             onAddSibling={addSiblingNode}
             onIndent={indent}

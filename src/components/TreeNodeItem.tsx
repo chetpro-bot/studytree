@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Star,
   Plus,
   Minus,
   CornerDownRight,
@@ -9,7 +8,7 @@ import {
   ArrowDown,
   Trash2,
 } from 'lucide-react';
-import type { StudyNode, LearningStatus } from '../types';
+import type { StudyNode } from '../types';
 import { countDescendants } from '../utils/treeUtils';
 
 interface TreeNodeItemProps {
@@ -20,7 +19,6 @@ interface TreeNodeItemProps {
   searchMatchingIds: Set<string>;
   onSelectNode: (id: string) => void;
   onToggleExpand: (id: string) => void;
-  onToggleStar: (id: string) => void;
   onAddChild: (parentId: string) => void;
   onAddSibling: (targetId: string) => void;
   onMoveNode: (id: string, direction: 'up' | 'down') => void;
@@ -35,7 +33,6 @@ export const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
   searchMatchingIds,
   onSelectNode,
   onToggleExpand,
-  onToggleStar,
   onAddChild,
   onAddSibling,
   onMoveNode,
@@ -46,30 +43,6 @@ export const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
   const isMatching = searchMatchingIds.has(node.id);
   const hasChildren = node.children && node.children.length > 0;
   const totalSubCount = countDescendants(node);
-
-  const getStatusColor = (status: LearningStatus) => {
-    switch (status) {
-      case 'mastered':
-        return 'bg-emerald-500 ring-2 ring-emerald-200 dark:ring-emerald-900/50';
-      case 'learning':
-        return 'bg-amber-500 ring-2 ring-amber-200 dark:ring-amber-900/50';
-      case 'not_started':
-      default:
-        return 'bg-slate-300 dark:bg-slate-600';
-    }
-  };
-
-  const getStatusLabel = (status: LearningStatus) => {
-    switch (status) {
-      case 'mastered':
-        return '암기완료';
-      case 'learning':
-        return '학습중';
-      case 'not_started':
-      default:
-        return '미학습';
-    }
-  };
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -116,32 +89,6 @@ export const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
               <div className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-600" />
             </div>
           )}
-
-          {/* 학습 상태 점 */}
-          <div
-            className={`w-2 h-2 rounded-full shrink-0 transition-transform ${getStatusColor(
-              node.status
-            )}`}
-            title={`상태: ${getStatusLabel(node.status)}`}
-          />
-
-          {/* 중요 별표 버튼 */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleStar(node.id);
-            }}
-            className={`p-0.5 rounded transition shrink-0 ${
-              node.starred
-                ? 'text-amber-400 fill-amber-400 hover:text-amber-500'
-                : 'text-slate-300 dark:text-slate-700 hover:text-amber-400 opacity-0 group-hover:opacity-100'
-            }`}
-            title={node.starred ? '중요 표시 해제' : '중요 표시'}
-          >
-            <Star
-              className={`w-3.5 h-3.5 ${node.starred ? 'fill-amber-400 text-amber-400' : ''}`}
-            />
-          </button>
 
           {/* 노드 제목 */}
           <span
@@ -242,7 +189,6 @@ export const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
               searchMatchingIds={searchMatchingIds}
               onSelectNode={onSelectNode}
               onToggleExpand={onToggleExpand}
-              onToggleStar={onToggleStar}
               onAddChild={onAddChild}
               onAddSibling={onAddSibling}
               onMoveNode={onMoveNode}
