@@ -97,7 +97,7 @@ export async function convertPdfWithGemini(
   fullText: string,
   fileName: string,
   apiKey: string,
-  modelName: string = 'gemini-2.5-flash'
+  modelName: string = 'gemini-3.8-flash'
 ): Promise<{ notebookTitle: string; description: string; nodes: StudyNode[] }> {
   const prompt = `당신은 학생과 수험생을 위한 학습 자료 지식 구조화 전문 AI입니다.
 아래 제공된 PDF 학습 자료 텍스트를 심층 분석하여, 지식 구조화 학습 앱 'StudyTree'의 규격에 맞는 트리 구조 JSON 데이터로 변환해주세요.
@@ -160,6 +160,19 @@ ${fullText.slice(0, 300000)}
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     const message = errorData?.error?.message || `API 호출 실패 (상태 코드: ${response.status})`;
+
+    // 구글 API가 신규 모델(예: gemini-3.8-flash) 사용을 권고하는 에러일 경우 자동 재시도
+    const recommendedModelMatch = message.match(/models\/(gemini-[\w.-]+)/);
+    if (recommendedModelMatch && recommendedModelMatch[1] && recommendedModelMatch[1] !== modelName) {
+      const fallbackModel = recommendedModelMatch[1];
+      console.warn(`모델 ${modelName} 대신 구글 권고 모델 ${fallbackModel}로 자동 재시도합니다.`);
+      return convertPdfWithGemini(fullText, fileName, apiKey, fallbackModel);
+    }
+
+    if (modelName !== 'gemini-3.8-flash' && message.includes('no longer available')) {
+      return convertPdfWithGemini(fullText, fileName, apiKey, 'gemini-3.8-flash');
+    }
+
     throw new Error(message);
   }
 

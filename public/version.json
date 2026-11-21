@@ -1,5 +1,5 @@
 {
-  "version": "v1.0.9",
+  "version": "v1.1.0",
   "releaseDate": "2026-11-21",
-  "notes": "PDF 로컬 목차 변환 엔진 고도화: Y좌표 기반 줄바꿈 완벽 복원 및 다단계(대단원-중단원-소단원) 자동 계층 구조화 지원"
+  "notes": "Google Gemini 최신 모델(gemini-3.8-flash) 지원 및 이전 모델 자동 폴백/재시도 처리 추가"
 }

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] - 2026-11-21
+
+### Fixed
+- **Google Gemini 최신 모델(gemini-3.8-flash) 지원 및 자동 전환**:
+  - Google Gemini API 정책 변경으로 신규 사용자에게 `gemini-2.5-flash`가 지원 중단되고 `gemini-3.8-flash` 사용이 필수가 됨에 따라 기본 모델을 `gemini-3.8-flash`로 전면 교체
+  - 이전 모델 선택 시 구글 권고 모델로 자동 감지 및 무중단 재시도(Auto Fallback) 로직 적용
+
 ## [1.0.9] - 2026-11-21
 
 ### Fixed

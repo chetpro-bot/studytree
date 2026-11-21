@@ -40,7 +40,7 @@ export const PdfImportModal: React.FC<PdfImportModalProps> = ({
   const [mode, setMode] = useState<'ai' | 'local'>('ai');
   const [apiKey, setApiKey] = useState<string>('');
   const [showApiKey, setShowApiKey] = useState<boolean>(false);
-  const [selectedModel, setSelectedModel] = useState<string>('gemini-2.5-flash');
+  const [selectedModel, setSelectedModel] = useState<string>('gemini-3.8-flash');
 
   // 진행 상태
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
@@ -443,7 +443,8 @@ export const PdfImportModal: React.FC<PdfImportModalProps> = ({
                         onChange={(e) => setSelectedModel(e.target.value)}
                         className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded px-1.5 py-0.5 text-[11px] focus:outline-none cursor-pointer"
                       >
-                        <option value="gemini-2.5-flash">Gemini 2.5 Flash (추천/고속)</option>
+                        <option value="gemini-3.8-flash">Gemini 3.8 Flash (최신/추천)</option>
+                        <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
                         <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
                       </select>
                     </div>
