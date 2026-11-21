@@ -91,28 +91,30 @@ interface RawAiResponse {
 
 /**
  * Gemini AI를 호출하여 PDF 텍스트를 StudyTree 계층 구조로 변환합니다.
+ * 속도 최적화: 간결한 핵심 요약 중심 프롬프트와 45초 타임아웃을 적용하여 10초 내외 빠른 생성 유도
  */
 export async function convertPdfWithGemini(
   fullText: string,
   fileName: string,
   apiKey: string,
-  modelName: string = 'gemini-3.8-flash',
+  modelName: string = 'gemini-2.0-flash',
   retryCount: number = 0
 ): Promise<{ notebookTitle: string; description: string; nodes: StudyNode[] }> {
-  const prompt = `당신은 학생과 수험생을 위한 학습 자료 지식 구조화 전문 AI입니다.
-아래 제공된 PDF 학습 자료 텍스트를 심층 분석하여, 지식 구조화 학습 앱 'StudyTree'의 규격에 맞는 트리 구조 JSON 데이터로 변환해주세요.
+  const prompt = `당신은 학생과 수험생을 위한 지식 구조화 전문 AI입니다.
+아래 제공된 PDF 학습 자료 텍스트를 핵심 위주로 신속하게 분석하여, 지식 구조화 앱 'StudyTree' 규격의 계층형 트리 JSON 데이터로 변환해주세요.
 
-[앱의 핵심 의도]
-1. 단순 목차가 아니라, 복습과 암기가 쉬운 체계적인 계층형 지식 트리(I. 대단원 -> 1. 중단원 -> 세부 개념)로 구조화합니다.
-2. 각 노드는 다음 4개 항목을 충실히 채워야 합니다:
-   - title: 단원 번호 및 명확한 주제명 (예: "I. 한국사의 흐름과 개항", "1. 흥선대원군의 대내외 개혁", "병인양요(1866)와 신미양요(1871) 비교")
-   - summary: 시험 직전 복습용 핵심 요약 (중요 암기 키워드와 핵심 명제를 2~3줄의 깔끔한 줄바꿈 텍스트로 정리)
-   - notes: 상세 학습 노트 (원리, 인과관계, 정의, 배경, 비교 분석, 전개 과정 등을 가독성 좋고 읽기 편하게 서술)
-   - children: 하위 세부 개념/단원 노드 목록 (하위 내용이 없으면 빈 배열 [])
+[핵심 작성 지침 - 빠른 응답을 위한 간결한 핵심 요약]
+1. 계층 구조: I. 대단원 -> 1. 중단원 -> 세부 개념의 2~3단계 트리 (전체 8~15개 핵심 노드로 압축)
+2. 각 노드 작성 기준:
+   - title: 단원 번호 및 명확한 주제명 (예: "1. 약물 상호작용의 기본 원리", "3-4. 약물대사효소(CYP)")
+   - summary: 시험 직전 복습용 핵심 요약 (중요 암기 키워드 위주 2줄 내외)
+   - notes: 핵심 원리 및 중요 암기 포인트 요약 (3~5줄 내외의 깔끔한 글머리 기호 텍스트)
+   - children: 하위 단원 노드 목록 (하위 내용이 없으면 빈 배열 [])
 3. 최상위 노트북 제목(notebookTitle)은 PDF 문서의 핵심 주제를 살려 짓습니다 (예: "[학습노트] " + 핵심과목/주제).
+4. 장황한 문장을 배제하고 핵심 위주로 간결하게 작성하여 신속하게 응답하세요.
 
 [응답 JSON 규격]
-반드시 마크다운 코드블록이나 불필요한 서두 없이 다음 스키마를 만족하는 순수 JSON으로만 응답해야 합니다:
+마크다운 코드블록이나 불필요한 사족 없이 순수 JSON으로만 응답:
 {
   "notebookTitle": "string",
   "description": "string",
@@ -134,7 +136,7 @@ export async function convertPdfWithGemini(
 }
 
 [학습 자료 텍스트]:
-${fullText.slice(0, 80000)}
+${fullText.slice(0, 40000)}
 `;
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
@@ -142,62 +144,79 @@ ${fullText.slice(0, 80000)}
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const generationConfig: Record<string, any> = {
     responseMimeType: 'application/json',
+    maxOutputTokens: 3000,
   };
 
-  // gemini-3.8-flash의 경우 thinkingLevel을 'low'로 지정하여 빠른 응답 유도
   if (modelName.includes('gemini-3.8')) {
     generationConfig.thinkingConfig = {
       thinkingLevel: 'low',
     };
   }
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      contents: [
-        {
-          parts: [{ text: prompt }],
-        },
-      ],
-      generationConfig,
-    }),
-  });
+  // 45초 타임아웃 컨트롤러
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 45000);
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [{ text: prompt }],
+          },
+        ],
+        generationConfig,
+      }),
+    });
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      throw new Error(
+        '구글 AI 응답 대기 시간이 45초를 초과했습니다. 구글 서버 트래픽이 많을 때는 대기 시간 없이 0.1초 만에 완료되는 "빠른 로컬 목차 변환"을 이용해 보세요.'
+      );
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     const message = errorData?.error?.message || `API 호출 실패 (상태 코드: ${response.status})`;
 
-    // 1. 구글 서버 일시적 과부하(high demand / 503 / 429) 처리: 1.5초 대기 후 1회 재시도
+    // 구글 서버 일시적 과부하(high demand / 503 / 429) 처리
     if (message.includes('high demand') || response.status === 503 || response.status === 429) {
       if (retryCount < 1) {
         await new Promise((r) => setTimeout(r, 1500));
         return convertPdfWithGemini(fullText, fileName, apiKey, modelName, retryCount + 1);
       }
-      // 1.5-flash나 2.0-flash로 대체 시도
-      if (modelName === 'gemini-3.8-flash') {
+      if (modelName !== 'gemini-2.0-flash') {
         try {
           return await convertPdfWithGemini(fullText, fileName, apiKey, 'gemini-2.0-flash', 0);
         } catch {
-          // fallback failed, throw friendly error
+          // fallback failed
         }
       }
       throw new Error(
-        '현재 구글 AI 서버에 전 세계적인 요청이 몰려 일시적으로 지연되고 있습니다. 잠시 후 다시 시도하시거나, 아래의 "빠른 로컬 목차 변환"을 이용하시면 1초 만에 즉시 변환됩니다.'
+        '현재 구글 AI 서버에 전 세계적인 요청이 몰려 일시적으로 지연되고 있습니다. 잠시 후 다시 시도하시거나, 아래의 "빠른 로컬 목차 변환"을 이용하시면 0.1초 만에 즉시 변환됩니다.'
       );
     }
 
-    // 2. 신규 모델 권고 에러일 경우 자동 재시도
+    // 신규 모델 권고 에러일 경우 자동 재시도
     const recommendedModelMatch = message.match(/models\/(gemini-[\w.-]+)/);
     if (recommendedModelMatch && recommendedModelMatch[1] && recommendedModelMatch[1] !== modelName) {
       const fallbackModel = recommendedModelMatch[1];
       return convertPdfWithGemini(fullText, fileName, apiKey, fallbackModel, 0);
     }
 
-    if (modelName !== 'gemini-3.8-flash' && message.includes('no longer available')) {
-      return convertPdfWithGemini(fullText, fileName, apiKey, 'gemini-3.8-flash', 0);
+    if (message.includes('no longer available')) {
+      return convertPdfWithGemini(fullText, fileName, apiKey, 'gemini-2.0-flash', 0);
     }
 
     throw new Error(message);

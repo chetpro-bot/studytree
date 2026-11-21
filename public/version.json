@@ -1,5 +1,5 @@
 {
-  "version": "v1.1.1",
+  "version": "v1.1.2",
   "releaseDate": "2026-11-21",
-  "notes": "구글 AI 서버 과부하(High Demand) 자동 재시도/대체모델 폴백 및 실시간 분석 경과 타이머/원클릭 로컬 변환 지원"
+  "notes": "AI PDF 변환 속도 대폭 최적화(프롬프트 경량화, maxOutputTokens, 45초 타임아웃) 및 실시간 즉시 로컬 변환 완료 버튼 제공"
 }

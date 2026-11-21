@@ -40,7 +40,7 @@ export const PdfImportModal: React.FC<PdfImportModalProps> = ({
   const [mode, setMode] = useState<'ai' | 'local'>('ai');
   const [apiKey, setApiKey] = useState<string>('');
   const [showApiKey, setShowApiKey] = useState<boolean>(false);
-  const [selectedModel, setSelectedModel] = useState<string>('gemini-3.8-flash');
+  const [selectedModel, setSelectedModel] = useState<string>('gemini-2.0-flash');
 
   // 진행 상태
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
@@ -485,8 +485,8 @@ export const PdfImportModal: React.FC<PdfImportModalProps> = ({
                         onChange={(e) => setSelectedModel(e.target.value)}
                         className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded px-1.5 py-0.5 text-[11px] focus:outline-none cursor-pointer"
                       >
-                        <option value="gemini-3.8-flash">Gemini 3.8 Flash (최신/추천)</option>
-                        <option value="gemini-2.0-flash">Gemini 2.0 Flash (안정적)</option>
+                        <option value="gemini-2.0-flash">Gemini 2.0 Flash (빠르고 안정적 / 추천)</option>
+                        <option value="gemini-3.8-flash">Gemini 3.8 Flash (최신 모델)</option>
                         <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
                       </select>
                     </div>
@@ -530,30 +530,51 @@ export const PdfImportModal: React.FC<PdfImportModalProps> = ({
               >
                 닫기
               </button>
-              <button
-                onClick={handleStartConversion}
-                disabled={!file || isProcessing}
-                className={`px-5 py-2.5 text-xs font-semibold rounded-lg transition flex items-center gap-2 shadow-sm ${
-                  !file || isProcessing
-                    ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
-                    : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200 dark:shadow-none'
-                }`}
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>
-                      {stepMessage || '처리 중...'}
-                      {elapsedSeconds > 0 && ` (${elapsedSeconds}초 경과)`}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>지식 트리로 변환 시작</span>
-                  </>
+              <div className="flex items-center gap-2">
+                {isProcessing && mode === 'ai' && extractedText && (
+                  <button
+                    onClick={() => {
+                      setIsProcessing(false);
+                      setMode('local');
+                      const result = parsePdfWithRuleEngine(extractedText, file?.name || '문서');
+                      setPreviewData({
+                        title: result.notebookTitle,
+                        description: result.description,
+                        nodes: result.nodes,
+                      });
+                    }}
+                    className="px-3 py-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 rounded-lg transition border border-indigo-200 dark:border-indigo-800 flex items-center gap-1 cursor-pointer animate-pulse"
+                    title="구글 AI 응답 대기를 취소하고 0.1초 만에 즉시 로컬로 변환합니다"
+                  >
+                    <Zap className="w-3.5 h-3.5 text-amber-500" />
+                    <span>대기 취소 및 로컬로 즉시 완료</span>
+                  </button>
                 )}
-              </button>
+                <button
+                  onClick={handleStartConversion}
+                  disabled={!file || isProcessing}
+                  className={`px-5 py-2.5 text-xs font-semibold rounded-lg transition flex items-center gap-2 shadow-sm ${
+                    !file || isProcessing
+                      ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+                      : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200 dark:shadow-none'
+                  }`}
+                >
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>
+                        {stepMessage || '처리 중...'}
+                        {elapsedSeconds > 0 && ` (${elapsedSeconds}초 경과)`}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>지식 트리로 변환 시작</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </>
           )}
         </div>
