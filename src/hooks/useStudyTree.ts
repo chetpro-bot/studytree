@@ -485,6 +485,40 @@ export function useStudyTree() {
     syncActiveNotebookToCloud(newNb);
   }, [syncActiveNotebookToCloud]);
 
+  // PDF 변환 데이터로 새 노트북 생성 및 즉시 활성화
+  const importNotebookFromPdf = useCallback(
+    (data: { title: string; description?: string; nodes: StudyNode[] }) => {
+      const newNb: Notebook = {
+        id: 'notebook-' + Date.now().toString(36),
+        title: data.title.trim() || '새 스터디 노트북',
+        category: 'general',
+        description: data.description || 'PDF에서 변환된 지식 트리',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        nodes: data.nodes,
+      };
+
+      setNotebooks((prev) => {
+        // 기존에 아무런 단원도 없는 빈 노트북 1개만 남아있다면 교체, 아니면 추가
+        if (prev.length === 1 && prev[0].nodes.length === 0 && prev[0].title === '새 노트북') {
+          return [newNb];
+        }
+        return [...prev, newNb];
+      });
+
+      setActiveNotebookId(newNb.id);
+      if (newNb.nodes.length > 0) {
+        setActiveNodeId(newNb.nodes[0].id);
+        setExpandedNodeIds(new Set(newNb.nodes.map((n) => n.id)));
+      } else {
+        setActiveNodeId(null);
+      }
+      syncActiveNotebookToCloud(newNb);
+      confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
+    },
+    [syncActiveNotebookToCloud]
+  );
+
   // 노트북 이름 변경
   const renameNotebook = useCallback(
     (notebookId: string, newTitle: string) => {
@@ -632,6 +666,7 @@ export function useStudyTree() {
     stats,
     selectNotebook,
     addNotebook,
+    importNotebookFromPdf,
     renameNotebook,
     deleteNotebook,
     setActiveNodeId,

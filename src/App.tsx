@@ -6,6 +6,7 @@ import { TreeExplorer } from './components/TreeExplorer';
 import { DetailEditor } from './components/DetailEditor';
 import { AuthModal } from './components/AuthModal';
 import { UpdateModal } from './components/UpdateModal';
+import { PdfImportModal } from './components/PdfImportModal';
 import { getBreadcrumbs } from './utils/treeUtils';
 
 export function App() {
@@ -30,6 +31,7 @@ export function App() {
     stats,
     selectNotebook,
     addNotebook,
+    importNotebookFromPdf,
     renameNotebook,
     deleteNotebook,
     setActiveNodeId,
@@ -61,6 +63,7 @@ export function App() {
   } = useAppUpdate();
 
   const [isMobileTreeOpen, setIsMobileTreeOpen] = useState(false);
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
 
   const breadcrumbs = useMemo(() => {
     if (!activeNotebook || !activeNodeId) return [];
@@ -82,6 +85,7 @@ export function App() {
         activeNotebookId={activeNotebookId}
         onSelectNotebook={selectNotebook}
         onAddNotebook={addNotebook}
+        onOpenPdfImport={() => setIsPdfModalOpen(true)}
         onRenameNotebook={renameNotebook}
         onDeleteNotebook={deleteNotebook}
         onExpandAll={expandAll}
@@ -134,6 +138,7 @@ export function App() {
             onAddChild={addChildNode}
             onAddSibling={addSiblingNode}
             onAddRootNode={addRootNode}
+            onOpenPdfImport={() => setIsPdfModalOpen(true)}
             onMoveNode={moveNode}
             onDeleteNode={deleteNode}
             onCheckUpdate={() => checkForUpdate(true)}
@@ -172,6 +177,13 @@ export function App() {
         onPerformUpdate={performUpdate}
         isChecking={isCheckingUpdate}
         onCheckAgain={() => checkForUpdate(true)}
+      />
+
+      {/* 5. PDF 학습 자료 지식 트리 변환 모달 */}
+      <PdfImportModal
+        isOpen={isPdfModalOpen}
+        onClose={() => setIsPdfModalOpen(false)}
+        onImport={importNotebookFromPdf}
       />
     </div>
   );

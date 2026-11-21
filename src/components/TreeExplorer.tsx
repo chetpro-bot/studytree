@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, BookOpen, Layers, RefreshCw } from 'lucide-react';
+import { Plus, BookOpen, Layers, RefreshCw, Sparkles } from 'lucide-react';
 import type { StudyNode, TreeStats } from '../types';
 import { TreeNodeItem } from './TreeNodeItem';
 import { APP_VERSION } from '../constants/version';
@@ -15,6 +15,7 @@ interface TreeExplorerProps {
   onAddChild: (parentId: string) => void;
   onAddSibling: (targetId: string) => void;
   onAddRootNode: () => void;
+  onOpenPdfImport?: () => void;
   onMoveNode: (id: string, direction: 'up' | 'down') => void;
   onDeleteNode: (id: string) => void;
   onCheckUpdate?: () => void;
@@ -31,6 +32,7 @@ export const TreeExplorer: React.FC<TreeExplorerProps> = ({
   onAddChild,
   onAddSibling,
   onAddRootNode,
+  onOpenPdfImport,
   onMoveNode,
   onDeleteNode,
   onCheckUpdate,
@@ -54,13 +56,24 @@ export const TreeExplorer: React.FC<TreeExplorerProps> = ({
           <div className="p-8 text-center text-slate-400 space-y-3">
             <BookOpen className="w-8 h-8 mx-auto opacity-40 text-slate-400" />
             <p className="text-xs">등록된 단원이 없습니다.</p>
-            <button
-              onClick={onAddRootNode}
-              className="inline-flex items-center gap-1 text-xs px-3 py-1.5 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 rounded-md font-medium transition"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              첫 대단원 만들기
-            </button>
+            <div className="flex flex-col gap-2 items-center">
+              <button
+                onClick={onAddRootNode}
+                className="w-full max-w-[190px] inline-flex items-center justify-center gap-1.5 text-xs px-3 py-1.5 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 rounded-md font-medium transition"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                첫 대단원 만들기
+              </button>
+              {onOpenPdfImport && (
+                <button
+                  onClick={onOpenPdfImport}
+                  className="w-full max-w-[190px] inline-flex items-center justify-center gap-1.5 text-xs px-3 py-1.5 bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/60 rounded-md font-medium transition"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+                  PDF 자료로 자동 변환
+                </button>
+              )}
+            </div>
           </div>
         ) : (
           <div className="space-y-0.5">

@@ -19,6 +19,7 @@ import {
   User as UserIcon,
   LogOut,
   RefreshCw,
+  Sparkles,
 } from 'lucide-react';
 import type { Notebook } from '../types';
 import type { User } from 'firebase/auth';
@@ -29,6 +30,7 @@ interface HeaderProps {
   activeNotebookId: string;
   onSelectNotebook: (id: string) => void;
   onAddNotebook: (title: string) => void;
+  onOpenPdfImport?: () => void;
   onRenameNotebook: (id: string, newTitle: string) => void;
   onDeleteNotebook: (id: string) => void;
   onExpandAll: () => void;
@@ -56,6 +58,7 @@ export const Header: React.FC<HeaderProps> = ({
   activeNotebookId,
   onSelectNotebook,
   onAddNotebook,
+  onOpenPdfImport,
   onRenameNotebook,
   onDeleteNotebook,
   onExpandAll,
@@ -220,6 +223,16 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
+          {onOpenPdfImport && (
+            <button
+              onClick={onOpenPdfImport}
+              title="PDF 학습 자료를 지식 트리로 자동 변환"
+              className="flex items-center gap-1 px-2 py-1 ml-0.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 hover:bg-indigo-100/80 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/80 rounded-md transition border border-indigo-100 dark:border-indigo-900/50"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+              <span className="hidden sm:inline">PDF 변환</span>
+            </button>
+          )}
         </div>
       </div>
 
