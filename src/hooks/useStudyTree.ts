@@ -507,15 +507,30 @@ export function useStudyTree() {
   // 노트북 삭제
   const deleteNotebook = useCallback(
     async (notebookId: string) => {
-      if (notebooks.length <= 1) {
-        alert('최소 1개의 노트북은 유지되어야 합니다.');
-        return;
-      }
+      let createdFreshNb: Notebook | null = null;
       setNotebooks((prev) => {
         const remaining = prev.filter((nb) => nb.id !== notebookId);
+        if (remaining.length === 0) {
+          const freshNb: Notebook = {
+            id: 'notebook-' + Date.now().toString(36),
+            title: '새 노트북',
+            category: 'general',
+            description: '',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            nodes: [],
+          };
+          createdFreshNb = freshNb;
+          setActiveNotebookId(freshNb.id);
+          setActiveNodeId(null);
+          setExpandedNodeIds(new Set());
+          return [freshNb];
+        }
+
         if (activeNotebookId === notebookId) {
           setActiveNotebookId(remaining[0].id);
           setActiveNodeId(remaining[0].nodes[0]?.id || null);
+          setExpandedNodeIds(new Set(remaining[0].nodes.map((n) => n.id)));
         }
         return remaining;
       });
@@ -523,12 +538,15 @@ export function useStudyTree() {
       if (currentUser) {
         try {
           await deleteUserNotebook(currentUser.uid, notebookId);
+          if (createdFreshNb) {
+            await saveUserNotebook(currentUser.uid, createdFreshNb);
+          }
         } catch (e) {
           console.error(e);
         }
       }
     },
-    [activeNotebookId, currentUser, notebooks.length]
+    [activeNotebookId, currentUser]
   );
 
   // 백업 내보내기/불러오기/샘플 초기화

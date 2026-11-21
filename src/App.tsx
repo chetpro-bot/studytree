@@ -46,7 +46,6 @@ export function App() {
     deleteNode,
     exportJSON,
     importJSON,
-    resetToSampleData,
   } = useStudyTree();
 
   const {
@@ -94,7 +93,6 @@ export function App() {
         onToggleTheme={toggleTheme}
         onExportJSON={exportJSON}
         onImportJSON={importJSON}
-        onResetSamples={resetToSampleData}
         isMobileTreeOpen={isMobileTreeOpen}
         onToggleMobileTree={() => setIsMobileTreeOpen((prev) => !prev)}
         currentUser={currentUser}

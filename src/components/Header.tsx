@@ -9,7 +9,6 @@ import {
   X,
   Download,
   Upload,
-  RotateCcw,
   Sun,
   Moon,
   ChevronDown,
@@ -41,7 +40,6 @@ interface HeaderProps {
   onToggleTheme: () => void;
   onExportJSON: () => void;
   onImportJSON: (json: string) => void;
-  onResetSamples: () => void;
   isMobileTreeOpen?: boolean;
   onToggleMobileTree: () => void;
   currentUser: User | null;
@@ -69,7 +67,6 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleTheme,
   onExportJSON,
   onImportJSON,
-  onResetSamples,
   isMobileTreeOpen,
   onToggleMobileTree,
   currentUser,
@@ -115,7 +112,11 @@ export const Header: React.FC<HeaderProps> = ({
 
   const handleDeleteNotebook = () => {
     if (!activeNotebook) return;
-    if (confirm(`'${activeNotebook.title}' 노트북을 삭제하시겠습니까?`)) {
+    const msg =
+      notebooks.length <= 1
+        ? `'${activeNotebook.title}' 노트북을 삭제하시겠습니까? (삭제 후 새로운 빈 노트북이 생성됩니다)`
+        : `'${activeNotebook.title}' 노트북을 삭제하시겠습니까?`;
+    if (confirm(msg)) {
       onDeleteNotebook(activeNotebook.id);
     }
   };
@@ -212,15 +213,13 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Edit3 className="w-3.5 h-3.5" />
           </button>
-          {notebooks.length > 1 && (
-            <button
-              onClick={handleDeleteNotebook}
-              title="현재 노트북 삭제"
-              className="p-1.5 text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-          )}
+          <button
+            onClick={handleDeleteNotebook}
+            title="현재 노트북 삭제"
+            className="p-1.5 text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
 
@@ -316,14 +315,6 @@ export const Header: React.FC<HeaderProps> = ({
           title="JSON 파일 불러오기"
         >
           <Upload className="w-4 h-4" />
-        </button>
-
-        <button
-          onClick={onResetSamples}
-          className="p-1.5 text-slate-500 hover:text-amber-600 dark:text-slate-400 dark:hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition"
-          title="샘플 데이터 복원/초기화"
-        >
-          <RotateCcw className="w-4 h-4" />
         </button>
 
         {/* 앱 최신 버전 확인 및 업데이트 버튼 */}
