@@ -1,5 +1,5 @@
 {
-  "version": "v1.0.2",
+  "version": "v1.0.3",
   "releaseDate": "2026-11-21",
-  "notes": "앱 업데이트 확인 및 즉시 반영 버튼 추가"
+  "notes": "트리 구조 가지선(Branch lines) 개편 및 에디터 UI 단순화"
 }

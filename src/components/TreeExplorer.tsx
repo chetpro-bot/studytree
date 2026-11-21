@@ -69,12 +69,14 @@ export const TreeExplorer: React.FC<TreeExplorerProps> = ({
             </button>
           </div>
         ) : (
-          <div className="space-y-0.5">
-            {nodes.map((node) => (
+          <div className="space-y-0">
+            {nodes.map((node, index) => (
               <TreeNodeItem
                 key={node.id}
                 node={node}
                 depth={0}
+                isLast={index === nodes.length - 1}
+                lineGuides={[]}
                 activeNodeId={activeNodeId}
                 expandedNodeIds={expandedNodeIds}
                 searchMatchingIds={searchMatchingIds}

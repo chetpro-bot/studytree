@@ -14,6 +14,8 @@ import { countDescendants } from '../utils/treeUtils';
 interface TreeNodeItemProps {
   node: StudyNode;
   depth: number;
+  isLast?: boolean;
+  lineGuides?: boolean[];
   activeNodeId: string | null;
   expandedNodeIds: Set<string>;
   searchMatchingIds: Set<string>;
@@ -28,6 +30,8 @@ interface TreeNodeItemProps {
 export const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
   node,
   depth,
+  isLast = false,
+  lineGuides = [],
   activeNodeId,
   expandedNodeIds,
   searchMatchingIds,
@@ -61,7 +65,7 @@ export const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
     <div className="select-none text-xs">
       <div
         onClick={() => onSelectNode(node.id)}
-        style={{ paddingLeft: `${Math.max(6, depth * 18 + 8)}px` }}
+        style={{ paddingLeft: `${depth * 20 + 10}px` }}
         className={`group relative flex items-center justify-between py-1.5 pr-2 transition cursor-pointer border-l-3 ${
           isSelected
             ? 'bg-indigo-50/90 dark:bg-indigo-950/40 border-indigo-600 dark:border-indigo-400 text-indigo-950 dark:text-indigo-100 font-medium'
@@ -70,23 +74,66 @@ export const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
             : 'hover:bg-slate-100/80 dark:hover:bg-slate-850/80 border-transparent text-slate-700 dark:text-slate-300'
         }`}
       >
+        {/* 상위 조상 연결선 (Ancestor Vertical Lines) */}
+        {lineGuides &&
+          lineGuides.map((hasMore, idx) =>
+            hasMore ? (
+              <span
+                key={idx}
+                className="absolute top-0 bottom-0 w-[1.5px] bg-slate-300 dark:bg-slate-700 pointer-events-none"
+                style={{ left: `${idx * 20 + 17}px` }}
+              />
+            ) : null
+          )}
+
+        {/* 현재 레벨의 가지 연결선 (Branch Lines: ├── 또는 └──) */}
+        {depth > 0 && (
+          <>
+            {isLast ? (
+              /* 마지막 자식: └── 곡선 */
+              <span
+                className="absolute top-0 h-1/2 border-l-[1.5px] border-b-[1.5px] border-slate-300 dark:bg-transparent dark:border-slate-700 rounded-bl-sm pointer-events-none"
+                style={{
+                  left: `${(depth - 1) * 20 + 17}px`,
+                  width: '13px',
+                }}
+              />
+            ) : (
+              /* 중간 자식: ├── 직각 가지선 */
+              <>
+                <span
+                  className="absolute top-0 bottom-0 w-[1.5px] bg-slate-300 dark:bg-slate-700 pointer-events-none"
+                  style={{ left: `${(depth - 1) * 20 + 17}px` }}
+                />
+                <span
+                  className="absolute top-1/2 h-[1.5px] bg-slate-300 dark:bg-slate-700 pointer-events-none -translate-y-1/2"
+                  style={{
+                    left: `${(depth - 1) * 20 + 17}px`,
+                    width: '13px',
+                  }}
+                />
+              </>
+            )}
+          </>
+        )}
+
         {/* 좌측 콘텐츠 영역 */}
-        <div className="flex items-center gap-1.5 min-w-0 flex-1">
-          {/* [+] / [-] 토글 버튼 또는 Leaf 도트 */}
+        <div className="flex items-center gap-1.5 min-w-0 flex-1 relative z-10">
+          {/* [+] / [-] 토글 버튼 또는 Leaf 가지 선 */}
           {hasChildren ? (
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onToggleExpand(node.id);
               }}
-              className="w-4 h-4 rounded flex items-center justify-center bg-slate-200/90 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold transition shrink-0"
+              className="w-4 h-4 rounded flex items-center justify-center bg-slate-200/90 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold transition shrink-0 shadow-2xs"
               title={isExpanded ? '접기' : '펼치기'}
             >
               {isExpanded ? <Minus className="w-2.5 h-2.5" /> : <Plus className="w-2.5 h-2.5" />}
             </button>
           ) : (
             <div className="w-4 h-4 flex items-center justify-center shrink-0">
-              <div className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-600" />
+              <span className="w-2.5 h-[1.5px] bg-slate-400 dark:bg-slate-500 rounded-full" />
             </div>
           )}
 
@@ -173,17 +220,13 @@ export const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
       {/* 하위 자식 노드 재귀 렌더링 */}
       {hasChildren && isExpanded && (
         <div className="relative">
-          {/* 은은한 세로 트리 커넥터 가이드 라인 */}
-          <div
-            className="absolute bottom-0 top-0 border-l border-slate-200 dark:border-slate-800/80 pointer-events-none"
-            style={{ left: `${Math.max(6, depth * 18 + 15)}px` }}
-          />
-
-          {node.children.map((child) => (
+          {node.children.map((child, index) => (
             <TreeNodeItem
               key={child.id}
               node={child}
               depth={depth + 1}
+              isLast={index === node.children.length - 1}
+              lineGuides={[...lineGuides, !isLast]}
               activeNodeId={activeNodeId}
               expandedNodeIds={expandedNodeIds}
               searchMatchingIds={searchMatchingIds}
