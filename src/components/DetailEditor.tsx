@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useLayoutEffect, useEffect } from 'react';
 import {
   ChevronRight,
   Sparkles,
@@ -30,6 +30,33 @@ export const DetailEditor: React.FC<DetailEditorProps> = ({
   onIndent,
   onOutdent,
 }) => {
+  const summaryRef = useRef<HTMLTextAreaElement>(null);
+  const notesRef = useRef<HTMLTextAreaElement>(null);
+
+  const adjustHeight = (el: HTMLTextAreaElement | null) => {
+    if (!el) return;
+    el.style.height = 'auto';
+    const borderOffset = el.offsetHeight - el.clientHeight;
+    el.style.height = `${el.scrollHeight + borderOffset}px`;
+  };
+
+  useLayoutEffect(() => {
+    adjustHeight(summaryRef.current);
+  }, [node?.id, node?.summary]);
+
+  useLayoutEffect(() => {
+    adjustHeight(notesRef.current);
+  }, [node?.id, node?.notes]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      adjustHeight(summaryRef.current);
+      adjustHeight(notesRef.current);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   if (!node) {
     return (
       <div className="h-full flex flex-col items-center justify-center p-8 text-center text-slate-400 bg-slate-50/40 dark:bg-slate-900/30">
@@ -121,7 +148,7 @@ export const DetailEditor: React.FC<DetailEditorProps> = ({
         </div>
 
         {/* 핵심 요약 강조 박스 */}
-        <div className="rounded-xl border border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/60 dark:bg-indigo-950/30 p-4 space-y-2 shadow-xs">
+        <div className="rounded-xl border border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/60 dark:bg-indigo-950/30 p-4 space-y-2 shadow-xs transition-all">
           <div className="flex items-center justify-between">
             <label className="text-xs font-semibold text-indigo-900 dark:text-indigo-300 flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
@@ -129,11 +156,16 @@ export const DetailEditor: React.FC<DetailEditorProps> = ({
             </label>
           </div>
           <textarea
+            ref={summaryRef}
             value={node.summary}
-            onChange={(e) => onUpdateNode(node.id, { summary: e.target.value })}
+            onChange={(e) => {
+              onUpdateNode(node.id, { summary: e.target.value });
+              adjustHeight(e.target);
+            }}
             placeholder="핵심 요약 내용을 입력하세요..."
-            rows={2}
-            className="w-full text-xs md:text-sm font-medium bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 px-3 py-2 rounded-lg border border-indigo-200/80 dark:border-indigo-800/60 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-400 shadow-2xs min-h-[58px] resize-y leading-relaxed"
+            rows={1}
+            style={{ fieldSizing: 'content' } as React.CSSProperties}
+            className="w-full text-xs md:text-sm font-medium bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 px-3 py-2.5 rounded-lg border border-indigo-200/80 dark:border-indigo-800/60 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-400 shadow-2xs min-h-[58px] resize-none overflow-hidden leading-relaxed block box-border"
           />
         </div>
 
@@ -150,11 +182,16 @@ export const DetailEditor: React.FC<DetailEditorProps> = ({
           {/* 텍스트 입력 영역 */}
           <div className="p-4 md:p-5 min-h-[300px]">
             <textarea
+              ref={notesRef}
               value={node.notes}
-              onChange={(e) => onUpdateNode(node.id, { notes: e.target.value })}
-              rows={14}
+              onChange={(e) => {
+                onUpdateNode(node.id, { notes: e.target.value });
+                adjustHeight(e.target);
+              }}
               placeholder="상세한 학습 내용이나 정리 사항을 자유롭게 입력하세요..."
-              className="w-full h-full text-xs md:text-sm font-sans leading-relaxed bg-transparent text-slate-800 dark:text-slate-200 focus:outline-none resize-y placeholder:text-slate-400"
+              rows={6}
+              style={{ fieldSizing: 'content' } as React.CSSProperties}
+              className="w-full text-xs md:text-sm font-sans leading-relaxed bg-transparent text-slate-800 dark:text-slate-200 focus:outline-none resize-none overflow-hidden placeholder:text-slate-400 min-h-[260px] block box-border"
             />
           </div>
         </div>

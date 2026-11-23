@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.1] - 2026-11-23
+
+### Fixed & Improved
+- **핵심 요약 및 상세 노트 입력창 자동 높이 확장 (Auto-resize)**:
+  - 텍스트가 늘어날 때 내부 스크롤바가 생기는 대신 박스 높이가 내용 길이에 맞춰 자동으로 확장되도록 개선
+  - 내부 스크롤바와 우측 하단 크기 조절 핸들(`resize-y`)을 제거하여 깔끔한 카드 뷰 UI 제공
+  - 모던 브라우저 네이티브 `field-sizing: content` 및 브라우저 크기 조절/입력 이벤트에 반응하는 동적 계산 적용
+
 ## [1.2.0] - 2026-11-21
 
 ### Added
